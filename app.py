@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, send_file, redirect, url_for
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from datetime import datetime, timedelta
@@ -28,14 +28,36 @@ def index():
         stages = get_stages(project_type)
         project_timeline, excel_buffer, calendar_buffer = create_project_timeline(stages, project_name, start_date, end_date)
 
-        return send_file(
-            excel_buffer,
-            as_attachment=True,
-            download_name="project_timeline.xlsx",
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        # Save the buffers to the session or a temporary storage
+        excel_filename = 'project_timeline.xlsx'
+        calendar_filename = 'calendar.png'
+
+        with open(excel_filename, 'wb') as f:
+            f.write(excel_buffer.getbuffer())
+
+        with open(calendar_filename, 'wb') as f:
+            f.write(calendar_buffer.getbuffer())
+
+        return render_template(
+            'result.html',
+            project_type=project_type,
+            project_name=project_name,
+            start_date=start_date.strftime("%Y-%m-%d"),
+            end_date=end_date.strftime("%Y-%m-%d"),
+            project_timeline=project_timeline,
+            excel_filename=excel_filename
         )
 
     return render_template('index.html')
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    return send_file(
+        filename,
+        as_attachment=True,
+        download_name=filename,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' if filename.endswith('.xlsx') else 'image/png'
+    )
 
 def get_stages(project_type):
     minor_change_stages = [
