@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Timeline Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+</head>
+<body>
+    <div class="container">
+        <h1>Project Timeline</h1>
+        <div class="project-details">
+            <label>Project Type:</label> {{ project_type }}
+        </div>
+        <div class="project-details">
+            <label>Project Name:</label> {{ project_name }}
+        </div>
+        <div class="project-details">
+            <label>Start Date:</label> {{ start_date }}
+        </div>
+        <div class="project-details">
+            <label>End Date:</label> {{ end_date }}
+        </div>
+        <h2>Project Timeline:</h2>
+        <div class="timeline">
+            <table>
+                <tr>
+                    <th>Stage Name</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Duration</th>
+                </tr>
+                {% for stage in project_timeline %}
+                <tr>
+                    <td>{{ stage['Stage Name'] }}</td>
+                    <td>{{ stage['Start Date'] }}</td>
+                    <td>{{ stage['End Date'] }}</td>
+                    <td>{{ stage['Duration (weeks)'] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        <img src="{{ url_for('static', filename='calendar.png') }}" alt="Project Timeline Calendar">
+        <p>Excel file '{{ excel_filename }}' generated successfully!</p>
+    </div>
+</body>
+</html>

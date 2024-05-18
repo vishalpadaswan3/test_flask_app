@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Timeline</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Project Timeline</h1>
+        <form action="/" method="post">
+            <label for="project_type">Project Type:</label>
+            <select name="project_type" id="project_type" required>
+                <option value="">Select Project Type</option>
+                <option value="1">Minor Change</option>
+                <option value="2">Adapt Project</option>
+            </select><br>
+
+            <label for="project_name">Project Name:</label>
+            <input type="text" name="project_name" id="project_name" required><br>
+
+            <label for="start_date">Start Date:</label>
+            <input type="date" name="start_date" id="start_date" required><br>
+
+            <label for="end_date">End Date:</label>
+            <input type="date" name="end_date" id="end_date" required><br>
+
+            <div id="dynamic_fields"></div> <!-- This will contain the dynamically generated fields -->
+
+            <button type="submit">Generate Timeline</button>
+        </form>
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+    </div>
+
+    <script>
+        document.getElementById("project_type").addEventListener("change", function() {
+            var projectType = this.value;
+            var dynamicFieldsDiv = document.getElementById("dynamic_fields");
+            dynamicFieldsDiv.innerHTML = ""; // Clear previous dynamic fields
+            
+            var stages = [];
+            if (projectType === "1") {
+                stages = ["Project kickoff", "Drawing and BOM", "QGCO", "Cable Sourcing", "Air gap analysis", "Customer C sample", "Customer approval for drawing", "D sample Production Release", "Cable PPAP", "QGC4", "SOP"];
+            } else if (projectType === "2") {
+                stages = ["Project kickoff", "Design and Specification", "Prototype", "Production", "Testing", "Implementation", "Finalization"];
+            }
+            
+            stages.forEach(function(stage) {
+                var label = document.createElement("label");
+                label.textContent = stage + ": ex ( 2 - 4 )";
+
+                var input = document.createElement("input");
+                input.type = "text";
+                input.name = stage.toLowerCase().replace(/\s/g, "_"); // Convert stage name to lowercase and replace spaces with underscores
+                input.required = true;
+
+                dynamicFieldsDiv.appendChild(label);
+                dynamicFieldsDiv.appendChild(input);
+                dynamicFieldsDiv.appendChild(document.createElement("br"));
+            });
+        });
+    </script>
+</body>
+</html>
