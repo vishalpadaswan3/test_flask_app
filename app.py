@@ -26,7 +26,7 @@ def index():
             return render_template('index.html', error=str(e))
 
         stages = get_stages(project_type)
-        project_timeline, excel_buffer = create_project_timeline(stages, project_name, start_date, end_date)
+        project_timeline, excel_buffer, calendar_buffer = create_project_timeline(stages, project_name, start_date, end_date)
 
         return send_file(
             excel_buffer,
@@ -84,14 +84,14 @@ def create_project_timeline(stages, project_name, start_date, end_date):
     df = pd.DataFrame(project_timeline)
 
     # Create a BytesIO buffer and write the DataFrame to it as an Excel file
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+    excel_output = io.BytesIO()
+    with pd.ExcelWriter(excel_output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False)
-    output.seek(0)  # Reset buffer position to the beginning
+    excel_output.seek(0)  # Reset buffer position to the beginning
 
-    display_calendar(start_date, end_date, project_timeline)
+    calendar_buffer = display_calendar(start_date, end_date, project_timeline)
 
-    return project_timeline, output
+    return project_timeline, excel_output, calendar_buffer
 
 def display_calendar(start_date, end_date, project_timeline):
     fig, ax = plt.subplots(figsize=(12, 6))
@@ -118,7 +118,13 @@ def display_calendar(start_date, end_date, project_timeline):
     plt.grid(True)
 
     plt.tight_layout()
-    plt.savefig('static/calendar.png')
+
+    # Save the figure to an in-memory buffer
+    calendar_output = io.BytesIO()
+    plt.savefig(calendar_output, format='png')
+    calendar_output.seek(0)  # Reset buffer position to the beginning
+
+    return calendar_output
 
 if __name__ == '__main__':
     app.run(debug=True)
