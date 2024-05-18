@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_file
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from datetime import datetime, timedelta
 import calendar
 import pandas as pd
+import io
 
 app = Flask(__name__)
 
@@ -25,13 +26,16 @@ def index():
             return render_template('index.html', error=str(e))
 
         stages = get_stages(project_type)
-        project_timeline, excel_filename = create_project_timeline(stages, project_name, start_date, end_date)
+        project_timeline, excel_buffer = create_project_timeline(stages, project_name, start_date, end_date)
 
-        # Pass project details to the result page
-        return render_template('result.html', project_type=project_type, project_name=project_name, start_date=start_date.strftime("%Y-%m-%d"), end_date=end_date.strftime("%Y-%m-%d"), project_timeline=project_timeline, excel_filename=excel_filename)
+        return send_file(
+            excel_buffer,
+            as_attachment=True,
+            download_name="project_timeline.xlsx",
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
 
     return render_template('index.html')
-
 
 def get_stages(project_type):
     minor_change_stages = [
@@ -70,21 +74,24 @@ def create_project_timeline(stages, project_name, start_date, end_date):
 
         project_timeline.append({
             'Stage Name': stage_name,
-            'Start Date': current_stage_start,  # Convert to datetime object
-            'End Date': current_stage_end,  # Convert to datetime object
+            'Start Date': current_stage_start,
+            'End Date': current_stage_end,
             'Duration (weeks)': f"{start_weeks}-{end_weeks}"
         })
 
         current_stage_start = current_stage_end
 
     df = pd.DataFrame(project_timeline)
-    excel_filename = "project_timeline.xlsx"
-    df.to_excel(excel_filename, index=False)
+
+    # Create a BytesIO buffer and write the DataFrame to it as an Excel file
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False)
+    output.seek(0)  # Reset buffer position to the beginning
 
     display_calendar(start_date, end_date, project_timeline)
 
-    return project_timeline, excel_filename
-
+    return project_timeline, output
 
 def display_calendar(start_date, end_date, project_timeline):
     fig, ax = plt.subplots(figsize=(12, 6))
